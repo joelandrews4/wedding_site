@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Wedding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Garamond', serif;
+            background: linear-gradient(135deg, #fef4f0 0%, #fff9f5 100%);
+            color: #5a4a42;
+            line-height: 1.6;
+            padding-top: 70px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 2px 15px rgba(200, 180, 170, 0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 10px 20px;
+            box-shadow: 0 2px 20px rgba(200, 180, 170, 0.25);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5em;
+            color: #8b6f5c;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #8b6f5c;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #d4a89f;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #d4a89f;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #8b6f5c;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 60px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 60px;
+                left: -100%;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                gap: 0;
+                padding: 20px 0;
+                box-shadow: 0 4px 20px rgba(200, 180, 170, 0.2);
+                transition: left 0.3s ease;
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .nav-links a {
+                padding: 15px 30px;
+                display: block;
+                border-bottom: 1px solid rgba(212, 168, 159, 0.1);
+            }
+
+            .nav-links a::after {
+                display: none;
+            }
+
+            .nav-brand {
+                font-size: 1.3em;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(254, 244, 240, 0.4) 100%);
+            border-radius: 20px;
+            margin-bottom: 60px;
+            box-shadow: 0 4px 20px rgba(200, 180, 170, 0.1);
+        }
+
+        .names {
+            font-size: 3.5em;
+            font-weight: 300;
+            color: #8b6f5c;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .ampersand {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 1.2em;
+            color: #d4a89f;
+        }
+
+        .tagline {
+            font-size: 1.3em;
+            color: #9b8178;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .divider {
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4a89f, transparent);
+            margin: 30px auto;
+        }
+
+        section {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 50px 40px;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(200, 180, 170, 0.08);
+        }
+
+        h2 {
+            font-size: 2.2em;
+            color: #8b6f5c;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .details-box {
+            background: rgba(212, 168, 159, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #d4a89f;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #8b6f5c;
+            display: inline-block;
+            width: 100px;
+        }
+
+        .detail-value {
+            color: #6b5b54;
+        }
+
+        .schedule-item {
+            padding: 20px;
+            margin: 15px 0;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border-left: 3px solid #d4a89f;
+        }
+
+        .time {
+            font-weight: bold;
+            color: #8b6f5c;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .activity {
+            color: #6b5b54;
+            font-size: 1.05em;
+        }
+
+        .rsvp-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
+            color: white;
+            padding: 18px 50px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
+        }
+
+        .rsvp-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        p {
+            margin: 15px 0;
+            font-size: 1.05em;
+            color: #6b5b54;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9b8178;
+            font-style: italic;
+        }
+
+        .heart {
+            color: #d4a89f;
+            font-size: 1.5em;
+            margin: 0 10px;
+        }
+
+        @media (max-width: 600px) {
+            .names {
+                font-size: 2.5em;
+            }
+
+            h2 {
+                font-size: 1.8em;
+            }
+
+            section {
+                padding: 30px 20px;
+            }
+
+            .detail-label {
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body>
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">Jane & John</div>
+            <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#welcome" onclick="closeMenu()">Welcome</a></li>
+                <li><a href="#details" onclick="closeMenu()">Details</a></li>
+                <li><a href="#schedule" onclick="closeMenu()">Schedule</a></li>
+                <li><a href="#rsvp" onclick="closeMenu()">RSVP</a></li>
+                <li><a href="#travel" onclick="closeMenu()">Travel</a></li>
+                <li><a href="#gifts" onclick="closeMenu()">Gifts</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="names">
+                Jane <span class="ampersand">&</span> John
+            </div>
+            <div class="tagline">We can't wait to celebrate our wedding with you!</div>
+        </header>
+
+        <section id="welcome">
+            <h2>Welcome</h2>
+            <div class="divider"></div>
+            <p class="center">
+                We are thrilled to invite you to join us as we say "I do" and begin our journey together as husband and
+                wife. Your presence would mean the world to us as we celebrate this special day surrounded by our loved
+                ones.
+            </p>
+        </section>
+
+        <section id="details">
+            <h2>Wedding Details</h2>
+            <div class="divider"></div>
+            <div class="details-box">
+                <div class="detail-item">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">Saturday, 15th June 2025</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">2:00 PM</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Venue:</span>
+                    <span class="detail-value">The Garden Estate, Countryside Manor, Oxfordshire</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="schedule">
+            <h2>Schedule</h2>
+            <div class="divider"></div>
+
+            <div class="schedule-item">
+                <div class="time">2:00 PM</div>
+                <div class="activity">Ceremony</div>
+            </div>
+
+            <div class="schedule-item">
+                <div class="time">3:00 PM</div>
+                <div class="activity">Drinks Reception</div>
+            </div>
+
+            <div class="schedule-item">
+                <div class="time">5:00 PM</div>
+                <div class="activity">Wedding Breakfast</div>
+            </div>
+
+            <div class="schedule-item">
+                <div class="time">8:00 PM</div>
+                <div class="activity">Evening Reception & Dancing</div>
+            </div>
+        </section>
+
+        <section id="rsvp">
+            <h2>RSVP</h2>
+            <div class="divider"></div>
+            <p class="center">
+                Please let us know if you can join us by 1st April 2025
+            </p>
+            <div class="center">
+                <a href="mailto:your-email@example.com?subject=Wedding RSVP" class="rsvp-button">RSVP Now</a>
+            </div>
+        </section>
+
+        <section id="travel">
+            <h2>Travel & Accommodation</h2>
+            <div class="divider"></div>
+            <p>
+                The venue is easily accessible by car with ample parking available. For those travelling from further
+                afield, we have reserved a block of rooms at the nearby Countryside Inn. Please mention our wedding when
+                booking.
+            </p>
+            <p>
+                <strong>Countryside Inn</strong><br>
+                Tel: 01234 567890<br>
+                Distance from venue: 2 miles
+            </p>
+        </section>
+
+        <section id="gifts">
+            <h2>Gift Registry</h2>
+            <div class="divider"></div>
+            <p class="center">
+                Your presence at our wedding is the greatest gift we could ask for. If you wish to give a gift, we would
+                be grateful for contributions toward our honeymoon fund.
+            </p>
+        </section>
+
+        <footer>
+            <div class="divider"></div>
+            <p>
+                <span class="heart">♥</span> We look forward to celebrating with you <span class="heart">♥</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.remove('active');
+        }
+
+        // Add scrolled class to navbar on scroll
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const navLinks = document.getElementById('navLinks');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const nav = document.querySelector('nav');
+
+            if (!nav.contains(event.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>
