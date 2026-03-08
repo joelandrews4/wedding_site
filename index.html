@@ -1,289 +1,1803 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
     <title>Joel & Ellen's Wedding</title>
     <link rel="icon" type="image/png" href="./favicon.ico" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
+      body {
+        font-family: "Georgia", "Garamond", serif;
+        background: linear-gradient(135deg, #fef4f0 0%, #fff9f5 100%);
+        color: #5a4a42;
+        line-height: 1.6;
+        padding-top: 70px;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        box-shadow: 0 2px 15px rgba(200, 180, 170, 0.15);
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      nav.scrolled {
+        padding: 10px 20px;
+        box-shadow: 0 2px 20px rgba(200, 180, 170, 0.25);
+      }
+
+      .nav-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-brand {
+        font-size: 1.5em;
+        color: #8b6f5c;
+        font-weight: 300;
+        letter-spacing: 1px;
+        transition: font-size 0.3s ease;
+      }
+
+      nav.scrolled .nav-brand {
+        font-size: 1.2em;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 30px;
+        list-style: none;
+      }
+
+      .nav-links a {
+        color: #8b6f5c;
+        text-decoration: none;
+        font-size: 0.95em;
+        transition: color 0.3s ease;
+        position: relative;
+      }
+
+      .nav-links a:hover {
+        color: #d4a89f;
+      }
+
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #d4a89f;
+        transition: width 0.3s ease;
+      }
+
+      .nav-links a:hover::after {
+        width: 100%;
+      }
+
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        color: #8b6f5c;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
         body {
-            font-family: 'Georgia', 'Garamond', serif;
-            background: linear-gradient(135deg, #fef4f0 0%, #fff9f5 100%);
-            color: #5a4a42;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+          padding-top: 60px;
         }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
+        .mobile-menu-btn {
+          display: block;
         }
 
-        .access-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 60px 50px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(200, 180, 170, 0.15);
-            text-align: center;
+        .nav-links {
+          position: fixed;
+          top: 60px;
+          left: -100%;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(10px);
+          flex-direction: column;
+          gap: 0;
+          padding: 20px 0;
+          box-shadow: 0 4px 20px rgba(200, 180, 170, 0.2);
+          transition: left 0.3s ease;
         }
 
+        .nav-links.active {
+          left: 0;
+        }
+
+        .nav-links a {
+          padding: 15px 30px;
+          display: block;
+          border-bottom: 1px solid rgba(212, 168, 159, 0.1);
+        }
+
+        .nav-links a::after {
+          display: none;
+        }
+
+        .nav-brand {
+          font-size: 1.3em;
+        }
+      }
+
+      /* =============================================
+         HERO
+         =============================================
+         Layout overview:
+         • .hero-scroll-wrapper  – tall enough that the sticky
+           element stays pinned while all 4 photos scroll past,
+           but short enough that the top of #welcome is always
+           visible below the fold (≈ 80vh visible height + a
+           peek of ~60px of the next section).
+         • On load: title fills the full sticky area, images
+           are invisible (opacity 0).
+         • As user scrolls in: images fade in as a stack behind
+           the title.
+         • As user scrolls out (near end): images fade out again.
+         ============================================= */
+
+      /* 
+        Wrapper = sticky height + scroll travel up to FADE_OUT_START.
+        scroll travel = 200vh, FADE_OUT_START = 0.65
+        → travel to fade start = 0.65 × 200vh = 130vh
+        → wrapper = (100vh - 130px) + 130vh = 230vh - 130px
+        This means the sticky releases the instant the last image
+        begins to fade, so Welcome scrolls up during the fade-out.
+      */
+      .hero-scroll-wrapper {
+        height: calc(230vh - 130px);
+        position: relative;
+      }
+
+      .hero-sticky {
+        position: sticky;
+        top: 70px;
+        height: calc(100vh - 130px); /* leave ~60px peek at bottom */
+        overflow: hidden;
+        background: #fef4f0;
+      }
+
+      /* ── Photo layer: centred, same width as .container, soft edges ── */
+      .hero-photo-layer {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(
+          800px,
+          calc(100% - 40px)
+        ); /* matches .container max-width + padding */
+        opacity: 0; /* fades in/out via JS */
+        transition: opacity 0.6s ease;
+        will-change: opacity;
+        border-radius: 16px;
+        overflow: hidden;
+        /* Soft feathered edges on all sides via CSS mask */
+        -webkit-mask-image:
+          linear-gradient(
+            to right,
+            transparent 0%,
+            black 1%,
+            black 99%,
+            transparent 100%
+          ),
+          linear-gradient(
+            to bottom,
+            transparent 0%,
+            black 1%,
+            black 99%,
+            transparent 100%
+          );
+        -webkit-mask-composite: destination-in;
+        mask-image:
+          linear-gradient(
+            to right,
+            transparent 0%,
+            black 1%,
+            black 99%,
+            transparent 100%
+          ),
+          linear-gradient(
+            to bottom,
+            transparent 0%,
+            black 1%,
+            black 99%,
+            transparent 100%
+          );
+        mask-composite: intersect;
+      }
+
+      /* Each photo cell is absolutely positioned to fill the layer */
+      .hero-photo-cell {
+        position: absolute;
+        inset: 0;
+        opacity: 0; /* individual photos also cross-fade */
+        transition: opacity 0.7s ease;
+      }
+
+      .hero-photo-cell.active {
+        opacity: 1;
+      }
+
+      .hero-photo-cell img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: brightness(0.88) saturate(0.85);
+      }
+
+      /* Dummy placeholder */
+      .hero-photo-cell .dummy-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(90, 74, 66, 0.35);
+        font-size: 1em;
+        font-style: italic;
+        letter-spacing: 0.5px;
+        background: #e0cdc8;
+      }
+      .hero-photo-cell:nth-child(1) .dummy-label {
+        background: #d9c4be;
+      }
+      .hero-photo-cell:nth-child(2) .dummy-label {
+        background: #cfc0ba;
+      }
+      .hero-photo-cell:nth-child(3) .dummy-label {
+        background: #e8d5d1;
+      }
+      .hero-photo-cell:nth-child(4) .dummy-label {
+        background: #d4bdb6;
+      }
+
+      /* Fade-out gradient at the very bottom of the sticky zone */
+      .hero-sticky::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to bottom, transparent, #fef4f0);
+        pointer-events: none;
+        z-index: 20;
+      }
+
+      /* ── Title ── */
+      .hero-title-area {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        pointer-events: none;
+        text-align: center;
+        padding: 20px;
+        /* JS drives translateY and opacity as images fade in */
+        will-change: transform, opacity;
+        transition:
+          transform 0.1s linear,
+          opacity 0.1s linear;
+      }
+
+      .names {
+        font-size: 3.5em;
+        font-weight: 300;
+        color: #6b4c3b;
+        margin-bottom: 12px;
+        letter-spacing: 2px;
+      }
+
+      .ampersand {
+        font-family: "Brush Script MT", cursive;
+        font-size: 1.2em;
+        color: #d4a89f;
+      }
+
+      .tagline {
+        font-size: 1.15em;
+        color: #9b8178;
+        font-style: italic;
+        letter-spacing: 0.5px;
+      }
+
+      .hero-divider {
+        width: 80px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #d4a89f, transparent);
+        margin: 18px auto;
+      }
+
+      /* ── Scroll hint arrow ── */
+      .scroll-hint {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 15;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
+        /* fades out as user scrolls — driven by JS */
+        will-change: opacity;
+        transition: opacity 0.4s ease;
+      }
+
+      .scroll-hint-text {
+        font-size: 0.72em;
+        color: #9b8178;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-family: "Georgia", "Garamond", serif;
+      }
+
+      .scroll-hint-arrow {
+        animation: bounceDown 1.6s ease-in-out infinite;
+      }
+
+      .scroll-hint-arrow-inner {
+        width: 22px;
+        height: 22px;
+        border-right: 2px solid #c9988d;
+        border-bottom: 2px solid #c9988d;
+        transform: rotate(45deg);
+      }
+
+      @keyframes bounceDown {
+        0%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.5;
+        }
+        50% {
+          transform: translateY(7px);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
         .names {
-            font-size: 3.5em;
-            font-weight: 300;
-            color: #8b6f5c;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
+          font-size: 2.4em;
+        }
+      }
+
+      /* =============================================
+         REST OF LAYOUT
+         ============================================= */
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .divider {
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #d4a89f, transparent);
+        margin: 30px auto;
+      }
+
+      section {
+        background: rgba(255, 255, 255, 0.6);
+        padding: 50px 40px;
+        margin-bottom: 40px;
+        border-radius: 15px;
+        box-shadow: 0 2px 15px rgba(200, 180, 170, 0.08);
+      }
+
+      h2 {
+        font-size: 2.2em;
+        color: #8b6f5c;
+        margin-bottom: 25px;
+        text-align: center;
+        font-weight: 300;
+        letter-spacing: 1px;
+      }
+
+      a {
+        color: #8b6f5c;
+        text-decoration: underline;
+      }
+
+      .details-box {
+        padding: 0px 30px;
+      }
+
+      .details-box-with-image {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 30px;
+      }
+
+      .details-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .venue-illustration {
+        flex-shrink: 0;
+        width: 200px;
+        height: auto;
+        opacity: 0.85;
+      }
+
+      /* Full-width, bottom-aligned image variant for details boxes */
+      .details-box-with-bottom-image {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: hidden;
+        /* prevent very tall images from overflowing the box */
+        background: rgba(212, 168, 159, 0.1);
+
+        border-radius: 10px;
+        border-left: 4px solid #d4a89f;
+      }
+
+      .directions-btn {
+        display: inline-flex;
+        align-items: center;
+        position: absolute;
+        padding: 10px 20px;
+        right: 10px;
+        bottom: 10px;
+        background: linear-gradient(135deg, #d4a89f 0%, #c99a90 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-size: 0.95em;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(212, 168, 159, 0.3);
+        border: none;
+        cursor: pointer;
+      }
+
+      .details-box-with-bottom-image img.details-image {
+        height: 90%;
+        display: block;
+        margin-top: auto;
+        /* move to the right place in the box */
+        align-self: flex-end;
+        /* push image to bottom of the box */
+        object-fit: cover;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        position: absolute;
+        right: 0px;
+        bottom: 0px;
+        object-fit: cover;
+        opacity: 0.08;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .details-box-with-bottom-image img.details-image-reception {
+        width: 100%;
+        display: block;
+        margin-top: auto;
+        /* move to the right place in the box */
+        align-self: flex-end;
+        /* push image to bottom of the box */
+        object-fit: cover;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        object-fit: cover;
+        opacity: 0.08;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .details-box-with-bottom-image img.details-image-pub {
+        width: 100%;
+        display: block;
+        margin-top: auto;
+        /* move to the right place in the box */
+        align-self: flex-end;
+        /* push image to bottom of the box */
+        object-fit: cover;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        position: absolute;
+        bottom: -100px;
+        top: 0px;
+        object-fit: cover;
+        opacity: 0.08;
+        z-index: 0;
+        pointer-events: none;
+        bottom: 0px;
+        height: 90%;
+      }
+
+      @media (max-width: 450px) {
+        .details-box-with-bottom-image img.details-image-pub {
+          bottom: 0px;
+          right: -60px;
+          height: 90%;
+          width: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .details-box-with-image {
+          flex-direction: column;
+          align-items: center;
         }
 
-        .ampersand {
-            font-family: 'Brush Script MT', cursive;
-            font-size: 1.2em;
-            color: #d4a89f;
+        .venue-illustration {
+          width: 160px;
+          margin-top: 20px;
         }
 
-        .welcome-text {
-            font-size: 1.3em;
-            color: #9b8178;
-            font-style: italic;
-            margin-bottom: 40px;
+        .details-box-with-bottom-image img.details-image {
+          left: 0px;
         }
 
-        .divider {
-            width: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #d4a89f, transparent);
-            margin: 30px auto;
+        .details-box-with-bottom-image img.details-image-reception {
+          bottom: 0px;
+          height: 90%;
+          width: auto;
+        }
+      }
+
+      .detail-item {
+        margin: 15px 0;
+        font-size: 1.1em;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .detail-label {
+        font-weight: bold;
+        color: #8b6f5c;
+        display: inline-block;
+        flex: 1;
+      }
+
+      .detail-value {
+        color: #6b5b54;
+        display: block;
+        white-space: pre-line;
+        flex: 3;
+      }
+
+      .directions-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(212, 168, 159, 0.4);
+        background: linear-gradient(135deg, #c99a90 0%, #b88880 100%);
+      }
+
+      .directions-btn:active {
+        transform: translateY(0);
+      }
+
+      .directions-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: white;
+      }
+
+      .schedule-item {
+        padding: 10px 20px;
+        margin: 15px 0;
+        background: rgba(212, 168, 159, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #d4a89f;
+      }
+
+      .time {
+        font-weight: bold;
+        color: #8b6f5c;
+        font-size: 1.2em;
+      }
+
+      .mapboxgl-control-container {
+        display: none;
+      }
+
+      .activity {
+        color: #6b5b54;
+        font-size: 1.05em;
+      }
+
+      .rsvp-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
+        color: white;
+        padding: 18px 50px;
+        text-decoration: none;
+        border-radius: 50px;
+        font-size: 1.2em;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
+        border: none;
+        cursor: pointer;
+        font-family: "Georgia", "Garamond", serif;
+      }
+
+      .rsvp-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
+      }
+
+      .rsvp-form {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 30px;
+        border-radius: 15px;
+        margin-top: 30px;
+        display: none;
+      }
+
+      .rsvp-form.active {
+        display: block;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #8b6f5c;
+        font-weight: bold;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e8d5d1;
+        border-radius: 8px;
+        font-family: "Georgia", "Garamond", serif;
+        font-size: 1em;
+        color: #5a4a42;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #d4a89f;
+      }
+
+      .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .guest-card {
+        background: rgba(212, 168, 159, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #d4a89f;
+      }
+
+      .guest-card h4 {
+        color: #8b6f5c;
+        margin-bottom: 15px;
+      }
+
+      .add-guest-btn,
+      .remove-guest-btn {
+        background: rgba(139, 111, 92, 0.1);
+        color: #8b6f5c;
+        padding: 10px 20px;
+        border: 2px solid #8b6f5c;
+        border-radius: 8px;
+        font-size: 0.95em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Georgia", "Garamond", serif;
+        margin-top: 10px;
+      }
+
+      .add-guest-btn:hover,
+      .remove-guest-btn:hover {
+        background: #8b6f5c;
+        color: white;
+      }
+
+      .remove-guest-btn {
+        background: rgba(212, 168, 159, 0.2);
+        border-color: #d4a89f;
+        color: #c9988d;
+        float: right;
+        margin-top: 0;
+      }
+
+      .remove-guest-btn:hover {
+        background: #d4a89f;
+        color: white;
+      }
+
+      .hotel-card {
+        background: rgba(212, 168, 159, 0.1);
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #d4a89f;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      .hotel-card.expanded {
+        box-shadow: 0 4px 12px rgba(212, 168, 159, 0.2);
+        background: rgba(212, 168, 159, 0.15);
+      }
+
+      .hotel-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.3s ease;
+      }
+
+      .hotel-card-header:hover {
+        background-color: rgba(212, 168, 159, 0.08);
+      }
+
+      .hotel-card-header h4 {
+        color: #8b6f5c;
+        margin: 0;
+        font-size: 1.2em;
+        flex: 1;
+      }
+
+      .hotel-card-toggle {
+        color: #8b6f5c;
+        font-size: 1.5em;
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+      }
+
+      .hotel-card.expanded .hotel-card-toggle {
+        transform: rotate(180deg);
+      }
+
+      .hotel-card-content {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease,
+          padding 0.3s ease;
+        padding: 0 20px;
+      }
+
+      .hotel-card.expanded .hotel-card-content {
+        max-height: 500px;
+        padding: 0 20px 20px 20px;
+      }
+
+      .hotel-card h4 {
+        color: #8b6f5c;
+        margin-bottom: 8px;
+        font-size: 1.2em;
+      }
+
+      .hotel-location {
+        color: #9b8178;
+        font-size: 0.95em;
+        margin-bottom: 10px;
+        font-weight: 500;
+      }
+
+      .hotel-description {
+        color: #6b5b54;
+        font-size: 1em;
+        margin-bottom: 15px;
+        line-height: 1.5;
+      }
+
+      .hotel-link {
+        display: inline-block;
+        background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.95em;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(212, 168, 159, 0.2);
+      }
+
+      .hotel-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(212, 168, 159, 0.3);
+      }
+
+      .event-card {
+        background: linear-gradient(
+          135deg,
+          rgba(212, 168, 159, 0.12) 0%,
+          rgba(212, 168, 159, 0.08) 100%
+        );
+        border: 2px solid rgba(212, 168, 159, 0.3);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .event-card:hover {
+        border-color: rgba(212, 168, 159, 0.5);
+        box-shadow: 0 4px 15px rgba(212, 168, 159, 0.15);
+        background: linear-gradient(
+          135deg,
+          rgba(212, 168, 159, 0.15) 0%,
+          rgba(212, 168, 159, 0.1) 100%
+        );
+      }
+
+      .event-card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .event-icons {
+        font-size: 2em;
+        display: flex;
+        gap: 10px;
+      }
+
+      .event-card h3 {
+        color: #8b6f5c;
+        margin: 0;
+        font-size: 1.4em;
+        font-weight: 300;
+        letter-spacing: 0.5px;
+      }
+
+      .event-card p {
+        color: #6b5b54;
+        margin: 0;
+        line-height: 1.7;
+      }
+
+      .form-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      .submit-btn,
+      .cancel-btn {
+        padding: 15px 40px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Georgia", "Garamond", serif;
+      }
+
+      .submit-btn {
+        background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
+      }
+
+      .cancel-btn {
+        background: rgba(139, 111, 92, 0.1);
+        color: #8b6f5c;
+        border: 2px solid #8b6f5c;
+      }
+
+      .cancel-btn:hover {
+        background: #8b6f5c;
+        color: white;
+      }
+
+      .success-message {
+        display: none;
+        background: rgba(144, 238, 144, 0.2);
+        border: 2px solid #90ee90;
+        color: #2d5016;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .success-message.active {
+        display: block;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      p {
+        margin: 15px 0;
+        font-size: 1.05em;
+        color: #6b5b54;
+      }
+
+      footer {
+        text-align: center;
+        padding: 40px 20px;
+        color: #9b8178;
+        font-style: italic;
+      }
+
+      .heart {
+        color: #d4a89f;
+        font-size: 1.5em;
+        margin: 0 10px;
+      }
+
+      @media (max-width: 768px) {
+        .names {
+          font-size: 2.5em;
         }
 
-        .instruction-text {
-            font-size: 1.05em;
-            color: #6b5b54;
-            margin-bottom: 30px;
+        h2 {
+          font-size: 1.8em;
         }
 
-        .access-form {
-            margin-top: 30px;
+        section {
+          padding: 30px 20px;
         }
 
-        .input-group {
-            margin-bottom: 25px;
+        .detail-item {
+          display: block;
         }
 
-        label {
-            display: block;
-            font-size: 0.95em;
-            color: #8b6f5c;
-            margin-bottom: 10px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+        .detail-label {
+          display: block;
+          margin-bottom: 5px;
         }
+      }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 1.1em;
-            border: 2px solid rgba(212, 168, 159, 0.3);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.6);
-            color: #5a4a42;
-            font-family: 'Georgia', 'Garamond', serif;
-            transition: all 0.3s ease;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #d4a89f;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 0 4px rgba(212, 168, 159, 0.1);
-        }
-
-        input[type="text"]::placeholder {
-            color: #b5a8a3;
-            letter-spacing: 1px;
-        }
-
-        .submit-button {
-            width: 100%;
-            background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
-            color: white;
-            padding: 18px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2em;
-            font-family: 'Georgia', 'Garamond', serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
-            letter-spacing: 1px;
-        }
-
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
-        }
-
-        .submit-button:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            color: #c9988d;
-            font-size: 0.95em;
-            margin-top: 15px;
-            display: none;
-            padding: 12px;
-            background: rgba(201, 152, 141, 0.1);
-            border-radius: 8px;
-            border-left: 3px solid #c9988d;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .help-text {
-            font-size: 0.9em;
-            color: #9b8178;
-            margin-top: 25px;
-            font-style: italic;
-        }
-
-        .heart {
-            color: #d4a89f;
-            font-size: 1.5em;
-            margin: 20px 10px;
-            display: inline-block;
-            animation: heartbeat 1.5s ease-in-out infinite;
-        }
-
-        @keyframes heartbeat {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        @media (max-width: 600px) {
-            .access-card {
-                padding: 40px 30px;
-            }
-
-            .names {
-                font-size: 2.5em;
-            }
-
-            .welcome-text {
-                font-size: 1.1em;
-            }
-        }
+      html {
+        scroll-behavior: smooth;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <div class="container">
-        <div class="access-card">
-            <div class="names">
-                Joel <span class="ampersand">&</span> Ellen
-            </div>
-            <div class="welcome-text">Welcome to our wedding celebration</div>
+  <body>
+    <nav id="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">Joel & Ellen</div>
+        <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#welcome" onclick="closeMenu()">Welcome</a></li>
+          <li><a href="#details" onclick="closeMenu()">Details</a></li>
+          <!-- <li><a href="#schedule" onclick="closeMenu()">Schedule</a></li> -->
+          <li>
+            <a href="#travel" onclick="closeMenu()">Travel & Accomodation</a>
+          </li>
+          <li><a href="#rsvp" onclick="closeMenu()">RSVP</a></li>
+          <li><a href="#gifts" onclick="closeMenu()">Gifts</a></li>
+        </ul>
+      </div>
+    </nav>
 
-            <div class="divider"></div>
-
-            <p class="instruction-text">
-                Please enter the access code from your invitation to view our wedding details and RSVP.
-            </p>
-
-            <form class="access-form" onsubmit="validateCode(event)">
-                <div class="input-group">
-                    <label for="accessCode">Access Code</label>
-                    <input type="text" id="accessCode" name="accessCode" placeholder="Enter code here" required
-                        autocomplete="off">
-                </div>
-
-                <button type="submit" class="submit-button">Enter</button>
-
-                <div id="errorMessage" class="error-message">
-                    The access code you entered is incorrect. Please check your invitation and try again.
-                </div>
-            </form>
-
-            <p class="help-text">
-                Can't find your access code? Please check your physical or digital invitation.
-            </p>
-
-            <div class="heart">♥</div>
+    <!-- =============================================
+           HERO
+           ============================================= -->
+    <div class="hero-scroll-wrapper" id="heroWrapper">
+      <div class="hero-sticky" id="heroSticky">
+        <!-- Photos layer – fades in/out as a whole, individual cells cross-fade -->
+        <div class="hero-photo-layer" id="heroPhotoLayer">
+          <div class="hero-photo-cell active" id="heroPhoto0">
+            <img
+              src="./JE1.png"
+              alt="Happy couple"
+              class="hero-image-long"
+              style="object-position: top"
+            />
+          </div>
+          <div class="hero-photo-cell" id="heroPhoto1">
+            <img
+              src="./JE5.jpg"
+              alt="Happy couple"
+              class="hero-image-long"
+              style="object-position: 60% center"
+            />
+          </div>
+          <div class="hero-photo-cell" id="heroPhoto2">
+            <img
+              src="./JE6.jpg"
+              alt="Happy couple"
+              class="hero-image-long"
+              style="object-position: 65% center"
+            />
+          </div>
         </div>
+
+        <!-- Title – always visible, centred -->
+        <div class="hero-title-area" id="heroTitleArea">
+          <div class="names">Joel <span class="ampersand">&</span> Ellen</div>
+          <div class="hero-divider"></div>
+          <div class="tagline">Saturday 5th September 2026</div>
+        </div>
+
+        <!-- Scroll hint -->
+        <div class="scroll-hint" id="scrollHint">
+          <div class="scroll-hint-arrow">
+            <div class="scroll-hint-arrow-inner"></div>
+          </div>
+        </div>
+      </div>
+      <!-- /hero-sticky -->
     </div>
+    <!-- /hero-scroll-wrapper -->
+
+    <div class="container">
+      <section id="welcome">
+        <h2>Welcome</h2>
+        <div class="divider"></div>
+        <p class="center" style="white-space: pre-line">
+          We are thrilled to invite you to join us in celebrating our marriage.
+          Please make sure you RSVP using the the form below. We can't wait to
+          share this special day with you ♥
+        </p>
+      </section>
+
+      <section id="details">
+        <h2>Details</h2>
+        <div class="divider"></div>
+        <div class="details-box-with-bottom-image" style="position: relative">
+          <img
+            src="./church_sketch2.png"
+            class="details-image"
+            alt="Church illustration"
+          />
+          <div class="details-box">
+            <div class="detail-item">
+              <span class="detail-label center" style="width: 100%"
+                >Ceremony</span
+              >
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date:</span>
+              <span class="detail-value">Saturday, 5th September 2026</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Time:</span>
+              <span class="detail-value">12:00</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Venue:</span>
+              <!-- prettier-ignore -->
+              <span class="detail-value"
+                >St Peter & St Paul’s Church, 
+                Church Street, 
+                Godalming, 
+                Surrey
+                GU7 1EW
+              </span>
+            </div>
+          </div>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=St+Peter+and+St+Paul%27s+Church%2C+Church+Street%2C+Godalming%2C+Surrey+GU7+1EW"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="directions-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+              <path d="M12 2v16l-5 2.5V7z" opacity="0.3" />
+            </svg>
+          </a>
+        </div>
+        <div class="divider"></div>
+        <div class="details-box-with-bottom-image" style="position: relative">
+          <img
+            src="./oxenford-sketch2.png"
+            class="details-image-reception"
+            alt="Reception illustration"
+          />
+          <div class="details-box">
+            <div class="detail-item">
+              <span class="detail-label center" style="width: 100%"
+                >Reception</span
+              >
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Venue:</span>
+              <!-- prettier-ignore -->
+              <span class="detail-value"
+                >Oxenford Farm, 
+                Milford Road, 
+                Elstead, 
+                Surrey, 
+                GU8 6LA
+              </span>
+            </div>
+          </div>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Oxenford+Farm+Ltd%2C+Milford+Road%2C+Elstead%2C+Surrey%2C+GU8+6LA"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="directions-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+              <path d="M12 2v16l-5 2.5V7z" opacity="0.3" />
+            </svg>
+          </a>
+        </div>
+        <div class="divider"></div>
+
+        <div class="details-box-with-bottom-image" style="position: relative">
+          <img
+            src="./the-star-sketch - Cropped.png"
+            class="details-image-pub"
+            alt="Reception illustration"
+          />
+          <div
+            class="details-box"
+            style="height: 300px; display: flex; flex-direction: column"
+          >
+            <div
+              class="detail-item"
+              style="display: flex; flex-direction: column; height: 100%"
+            >
+              <span class="detail-label center" style="width: 100%"
+                >Friday Night</span
+              >
+              <!--prettier-ignore-->
+              <span class="detail-value" style="flex: auto; align-content: end;">
+                If you are arriving the night before and want to join us for a drink, we will be in The Star in Godalming from 7pm.
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- <section id="schedule">
+        <h2>Schedule</h2>
+        <div class="divider"></div>
+
+        <div class="schedule-item">
+          <div class="time">12:00 PM</div>
+          <div class="activity">Ceremony</div>
+        </div>
+
+        <div class="schedule-item">
+          <div class="time">3:00 PM</div>
+          <div class="activity">Drinks Reception</div>
+        </div>
+
+        <div class="schedule-item">
+          <div class="time">4:30 PM</div>
+          <div class="activity">Wedding Breakfast</div>
+        </div>
+
+        <div class="schedule-item">
+          <div class="time">6:00 PM</div>
+          <div class="activity">Evening Guest Arrival</div>
+        </div>
+
+        <div class="schedule-item">
+          <div class="time">8:00 PM</div>
+          <div class="activity">Dancing & Refreshments</div>
+        </div>
+
+        <div class="schedule-item">
+          <div class="time">11:30 PM</div>
+          <div class="activity">Carriages</div>
+        </div>
+      </section> -->
+
+      <section id="travel">
+        <h2>Travel & Accommodation</h2>
+        <div class="divider"></div>
+        <div class="details-box">
+          <div class="detail-item">
+            <span class="detail-label" style="width: 100%"
+              >Getting to the church:</span
+            >
+            <!-- prettier-ignore -->
+            <span class="detail-value">If driving, the easiest place to park is the nearby <a href="https://maps.app.goo.gl/QBgjTpFrH6RGAxRq8" target="_blank">Crown Court</a> car park, where the church is accessible via a footpath. Alternative parking can be found at the <a href="https://maps.app.goo.gl/9zr8epsBJGZkjqEQ8" target="_blank">Borough Council</a> car park, or at the <a href="https://maps.app.goo.gl/GbLmk3tYQSWYSWts5" target="_blank">Train Station</a> car park if needed.
+                
+            The nearest train station is <a href="https://maps.app.goo.gl/i7t9yZctRYx92L7V9" target="_blank">Godalming</a>, which is a short walk to the church.
+                </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label" style="width: 100%"
+              >Getting to the reception:</span
+            >
+            <!-- prettier-ignore -->
+            <span class="detail-value">The reception will be held at <a href="https://www.google.com/maps/search/?api=1&query=Oxenford+Farm+Ltd%2C+Milford+Road%2C+Elstead%2C+Surrey%2C+GU8+6LA" target="_blank">Oxenford Farm</a>, which is approximately a 10 minute drive from the church. 
+                
+                Please let us know if you would like to be included in a car share from the church to the reception when you RSVP.
+                
+                Parking is available in a field on site. Please follow sat-nav directions to:
+
+              Oxenford Farm,
+              Milford Road,
+              Elstead,
+              Surrey, 
+              GU8 6LA
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label" style="width: 100%">Getting back:</span>
+            <!-- prettier-ignore -->
+            <span class="detail-value">Unless you're fortunate enough to have a designated driver, we recommended you book a taxi in advance for your return journey. 
+                
+                Local taxi companies include <a href="https://surreycarsguildford.com/" target="_blank">Surrey Cars</a>, <a href="https://www.surreyhilltaxis.co.uk/" target="_blank">Surrey Hills Taxis</a>, and <a href="https://charterhousecars.co.uk/" target="_blank">Charterhouse Cars</a>. 
+                Sadly, Uber is not available here.
+
+                The last train from Godalming to London is at 23:45PM, later trains are availble until 1:20AM from Guildford. Please check the schedule on the day as these times may change.
+            </span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="details-box">
+          <span class="detail-label" style="width: 100%">
+            Places to Stay Nearby
+          </span>
+          <p style="margin-bottom: 25px; color: #6b5b54">
+            Here are some lovely local places to consider:
+          </p>
+
+          <div class="hotel-card">
+            <div class="hotel-card-header" onclick="toggleHotelCard(this)">
+              <h4>The Kings Arms and Royal Hotel</h4>
+              <div class="hotel-card-toggle">▼</div>
+            </div>
+            <div class="hotel-card-content">
+              <div class="hotel-location">
+                📍 High Street, Godalming, Surrey
+              </div>
+              <div class="hotel-description">
+                A charming hotel in the heart of Godalming town, within walking
+                distance of the church.
+              </div>
+              <a
+                href="https://www.booking.com/hotel/gb/the-kings-arms-and-royal.en-gb.html"
+                target="_blank"
+                class="hotel-link"
+                >View Hotel</a
+              >
+            </div>
+          </div>
+
+          <div class="hotel-card">
+            <div class="hotel-card-header" onclick="toggleHotelCard(this)">
+              <h4>The Stag on the River</h4>
+              <div class="hotel-card-toggle">▼</div>
+            </div>
+            <div class="hotel-card-content">
+              <div class="hotel-location">
+                📍 Lower Eashing, Eashing, Godalming
+              </div>
+              <div class="hotel-description">
+                A lovely riverside inn with cozy rooms and a great restaurant,
+                just a short drive from the church & reception. Also the
+                location where a patron of the pub filmed
+                <a
+                  href="https://photos.app.goo.gl/gT99QSYShpAP6YJQ8"
+                  target="_blank"
+                  >Joel and his brothers capsizing down the weir whilst
+                  navigating the River Wey by canoe.</a
+                >
+              </div>
+              <a
+                href="https://www.booking.com/hotel/gb/the-stag-on-the-river.en-gb.html"
+                target="_blank"
+                class="hotel-link"
+                >View Hotel</a
+              >
+            </div>
+          </div>
+
+          <div class="hotel-card">
+            <div class="hotel-card-header" onclick="toggleHotelCard(this)">
+              <h4>The Ragged Robin</h4>
+              <div class="hotel-card-toggle">▼</div>
+            </div>
+            <div class="hotel-card-content">
+              <div class="hotel-location">📍 Meadrow, Godalming, Surrey</div>
+              <div class="hotel-description">
+                Our local pub, newly renovated, offers several comfortable
+                rooms. Being part owned by Raymond Blanc, the food is also
+                pretty good!
+              </div>
+              <a
+                href="https://www.booking.com/hotel/gb/the-ragged-robin.en-gb.html"
+                target="_blank"
+                class="hotel-link"
+                >View Hotel</a
+              >
+            </div>
+          </div>
+
+          <div class="hotel-card">
+            <div class="hotel-card-header" onclick="toggleHotelCard(this)">
+              <h4>The Withies Inn</h4>
+              <div class="hotel-card-toggle">▼</div>
+            </div>
+            <div class="hotel-card-content">
+              <div class="hotel-location">📍 Withies Lane, Compton, Surrey</div>
+              <div class="hotel-description">
+                A historic 17th-century country pub, set in a picturesque
+                village just a short drive from the church and reception.
+              </div>
+              <a
+                href="https://www.booking.com/hotel/gb/the-withies-inn.en-gb.html"
+                target="_blank"
+                class="hotel-link"
+                >View Hotel</a
+              >
+            </div>
+          </div>
+
+          <div class="hotel-card">
+            <div class="hotel-card-header" onclick="toggleHotelCard(this)">
+              <h4>The Inn on the Lake</h4>
+              <div class="hotel-card-toggle">▼</div>
+            </div>
+            <div class="hotel-card-content">
+              <div class="hotel-location">
+                📍 Ockford Road, Godalming, Surrey
+              </div>
+              <div class="hotel-description">
+                Another lovely local Inn offering 20 rooms, on the edge of town
+                within easy reach of the church.
+              </div>
+              <a
+                href="https://www.booking.com/hotel/gb/innkeeper-s-lodge-godalming.en-gb.html"
+                target="_blank"
+                class="hotel-link"
+                >View Hotel</a
+              >
+            </div>
+          </div>
+          <p style="margin-bottom: 25px; color: #6b5b54">
+            The nearby town of Guildford also has a wide range of hotels and
+            B&Bs, as well as some cheaper options such as the
+            <a
+              href="https://www.booking.com/hotel/gb/holiday-inn-guildford.en-gb.html"
+              target="_blank"
+              >Holiday Inn</a
+            >, the
+            <a
+              href="https://www.booking.com/hotel/gb/mandolay.en-gb.html"
+              target="_blank"
+              >Mandolay Hotel</a
+            >, and the
+            <a
+              href="https://www.travelodge.co.uk/hotels/287/Guildford-hotel"
+              target="_blank"
+              >Travelodge</a
+            >. Guildford is slightly further away (approx 15 minute drive) from
+            the church and reception venues, but is a beautiful town with a
+            lovely high street and castle, so worth considering if you want to
+            make a weekend of it! You should also be able to use Uber from here
+            - so that's a bonus!
+          </p>
+        </div>
+
+        <!-- <div class="details-box" style="padding: 0">
+          <div id="map" style="width: auto; height: 300px"></div>
+          <script>
+            mapboxgl.accessToken =
+              "pk.eyJ1IjoiYXBwZHJld3MiLCJhIjoiY21md2s5bmYxMDA3bDJscjQxNTdqdjdnYSJ9.bX6sE3GYjfqbbdjgyMre1A";
+            const map = new mapboxgl.Map({
+              container: "map", // container ID
+              style: "mapbox://styles/appdrews/cmi1k3pui007p01s95i3df57x",
+            });
+          </script>
+        </div> -->
+      </section>
+
+      <section id="rsvp">
+        <h2>RSVP</h2>
+        <div class="divider"></div>
+        <p class="center">Please let us know if you can join us!</p>
+        <div class="center">
+          <button class="rsvp-button" onclick="showRSVPForm()">RSVP Now</button>
+        </div>
+
+        <form class="rsvp-form" id="rsvpForm" onsubmit="submitRSVP(event)">
+          <div id="guestsContainer">
+            <div class="guest-card" data-guest-index="0">
+              <h4>Primary Guest</h4>
+              <div class="form-group">
+                <label for="name_0">Full Name *</label>
+                <input type="text" id="name_0" name="name_0" required />
+              </div>
+              <div class="form-group">
+                <label for="email_0">Email *</label>
+                <input type="email" id="email_0" name="email_0" required />
+              </div>
+              <div class="form-group">
+                <label for="attending_0">Will you be attending? *</label>
+                <select id="attending_0" name="attending_0" required>
+                  <option value="">Please select...</option>
+                  <option value="yes">Yes, I'll be there!</option>
+                  <option value="no">Sorry, I can't make it</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dietary_0">Dietary Requirements</label>
+                <textarea
+                  id="dietary_0"
+                  name="dietary_0"
+                  placeholder="Please let us know about any allergies or dietary preferences..."
+                ></textarea>
+              </div>
+              <div class="form-group">
+                <label for="lift_0"
+                  >Would you like us to arrange a car share for you from the
+                  church to the venue?*</label
+                >
+                <select id="lift_0" name="lift_0" required>
+                  <option value="">Please select...</option>
+                  <option value="can_provide_lift">
+                    No thanks, but I'm happy to provide a lift to someone!
+                  </option>
+                  <option value="yes_need_lift">Yes, please!</option>
+                  <option value="no">I'll make my own way</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="center">
+            <button type="button" class="add-guest-btn" onclick="addGuest()">
+              + Add Another Guest
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Additional Message</label>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Any questions or special requests?"
+            ></textarea>
+          </div>
+
+          <div class="form-buttons">
+            <button type="submit" class="submit-btn">Submit RSVP</button>
+            <button type="button" class="cancel-btn" onclick="hideRSVPForm()">
+              Cancel
+            </button>
+          </div>
+        </form>
+
+        <div class="success-message" id="successMessage">
+          <h3>Thank you for your RSVP!</h3>
+          <p>We've received your response and will be in touch soon.</p>
+        </div>
+      </section>
+
+      <section id="gifts">
+        <h2>Gift Registry</h2>
+        <div class="divider"></div>
+        <p class="center">
+          Your presence at our wedding is the greatest gift we could ask for. If
+          you wish to give a gift, we would be grateful for contributions toward
+          our honeymoon fund.
+        </p>
+      </section>
+
+      <footer>
+        <div class="divider"></div>
+        <p>
+          <span class="heart">♥</span> We look forward to celebrating with you
+          <span class="heart">♥</span>
+        </p>
+      </footer>
+    </div>
+    <!-- /container -->
 
     <script>
-        function validateCode(event) {
-            event.preventDefault();
+      let guestCount = 1;
 
-            async function unlock() {
-                console.log("Validating code...");
-                const code = document.getElementById("accessCode").value;
-                const res = await fetch("https://wedding-worker.joelandrews4.workers.dev/private", {
-                    method: "POST",
-                    body: JSON.stringify({ code }),
-                    headers: { "Content-Type": "application/json" }
-                });
-                if (res.ok) {
-                    const html = await res.text();
-                    document.open();
-                    document.write(html);
-                    document.close();
-                } else {
-                    // Incorrect code - show error message
-                    errorMessage.classList.add('show');
-                    document.getElementById('accessCode').value = '';
-                    document.getElementById('accessCode').focus();
+      function toggleMenu() {
+        const navLinks = document.getElementById("navLinks");
+        navLinks.classList.toggle("active");
+      }
 
-                    // Shake animation for error
-                    const card = document.querySelector('.access-card');
-                    card.style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        card.style.animation = '';
-                    }, 500);
-                }
-            }
-            unlock();
+      function toggleHotelCard(header) {
+        // close all other cards first
+        const allCards = document.querySelectorAll(".hotel-card");
+        allCards.forEach((card) => {
+          if (card.contains(header)) {
+            return; // skip the card that was clicked
+          }
+          card.classList.remove("expanded");
+        });
+        const card = header.closest(".hotel-card");
+        card.classList.toggle("expanded");
+      }
+
+      function closeMenu() {
+        const navLinks = document.getElementById("navLinks");
+        navLinks.classList.remove("active");
+      }
+
+      // ── Hero scroll logic ──────────────────────────────────────────────
+      // • Title scrolls up and fades out as first image fades in
+      // • Photos cycle across the scroll range
+      // • Photos fade out at 70% progress (Welcome appears sooner)
+      // • Scroll hint fades away once user starts scrolling
+      (function () {
+        const navbar = document.getElementById("navbar");
+        const wrapper = document.getElementById("heroWrapper");
+        const photoLayer = document.getElementById("heroPhotoLayer");
+        const titleArea = document.getElementById("heroTitleArea");
+        const scrollHint = document.getElementById("scrollHint");
+        const photoCells = [
+          document.getElementById("heroPhoto0"),
+          document.getElementById("heroPhoto1"),
+          document.getElementById("heroPhoto2"),
+        ];
+        const NUM_PHOTOS = photoCells.length;
+        let currentPhoto = 0;
+
+        function setActivePhoto(index) {
+          if (index === currentPhoto) return;
+          photoCells[currentPhoto].classList.remove("active");
+          photoCells[index].classList.add("active");
+          currentPhoto = index;
         }
 
-        // Add shake animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(style);
+        function onScroll() {
+          // Navbar shrink
+          navbar.classList.toggle("scrolled", window.scrollY > 50);
 
-        // Clear error message when user starts typing
-        document.getElementById('accessCode').addEventListener('input', function () {
-            document.getElementById('errorMessage').classList.remove('show');
+          if (!wrapper || !photoLayer) return;
+
+          const wrapperTop = wrapper.offsetTop;
+          const viewH = window.innerHeight;
+          const scrolled = Math.max(0, window.scrollY - wrapperTop);
+          // Progress is measured against a fixed 200vh travel so that
+          // photo cycling speed is independent of wrapper height.
+          // Wrapper height controls only when the sticky releases.
+          const TRAVEL_PX = viewH * 2;
+          const progress = Math.min(1, scrolled / TRAVEL_PX); // 0→1
+
+          // ── Scroll hint: fade out quickly once scrolling begins ──
+          scrollHint.style.opacity = Math.max(0, 1 - progress / 0.08);
+
+          // ── Photo layer opacity ──
+          // Fade IN:  0 → 0.10
+          // Full:     0.10 → 0.65
+          // Fade OUT: 0.65 → 1.0
+          // Wrapper releases at progress 0.65 so sticky scrolls away during fade-out.
+          const FADE_IN_END = 0.1;
+          const FADE_OUT_START = 0.65;
+          const FADE_OUT_END = 1.0;
+          let layerOpacity;
+          if (progress <= 0) {
+            layerOpacity = 0;
+          } else if (progress < FADE_IN_END) {
+            layerOpacity = progress / FADE_IN_END;
+          } else if (progress <= FADE_OUT_START) {
+            layerOpacity = 1;
+          } else if (progress < FADE_OUT_END) {
+            layerOpacity =
+              1 - (progress - FADE_OUT_START) / (FADE_OUT_END - FADE_OUT_START);
+          } else {
+            layerOpacity = 0;
+          }
+          photoLayer.style.opacity = layerOpacity;
+
+          // ── Title: scroll up and fade out as photos fade in ──
+          const titleProgress = Math.min(1, progress / FADE_IN_END);
+          const titleY = -(titleProgress * 60);
+          const titleOpacity = 1 - titleProgress;
+          titleArea.style.transform = `translateY(${titleY}px)`;
+          titleArea.style.opacity = titleOpacity;
+
+          // ── Active photo: cycle through NUM_PHOTOS across the visible phase ──
+          const photoProgress = Math.min(1, progress / FADE_OUT_START);
+          const photoIndex = Math.min(
+            NUM_PHOTOS - 1,
+            Math.floor(photoProgress * NUM_PHOTOS),
+          );
+          setActivePhoto(photoIndex);
+        }
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll(); // run once on load
+      })();
+
+      // Close mobile menu when clicking outside
+      document.addEventListener("click", function (event) {
+        const navLinks = document.getElementById("navLinks");
+        const menuBtn = document.querySelector(".mobile-menu-btn");
+        const nav = document.querySelector("nav");
+
+        if (!nav.contains(event.target)) {
+          navLinks.classList.remove("active");
+        }
+      });
+
+      // RSVP Form Functions
+      function showRSVPForm() {
+        document.getElementById("rsvpForm").classList.add("active");
+        document.querySelector(".rsvp-button").style.display = "none";
+        document.getElementById("successMessage").classList.remove("active");
+      }
+
+      function hideRSVPForm() {
+        document.getElementById("rsvpForm").classList.remove("active");
+        document.querySelector(".rsvp-button").style.display = "inline-block";
+        document.getElementById("rsvpForm").reset();
+        // Reset to one guest
+        const guestsContainer = document.getElementById("guestsContainer");
+        const guestCards = guestsContainer.querySelectorAll(".guest-card");
+        for (let i = 1; i < guestCards.length; i++) {
+          guestCards[i].remove();
+        }
+        guestCount = 1;
+      }
+
+      function addGuest() {
+        const guestsContainer = document.getElementById("guestsContainer");
+        const guestCard = document.createElement("div");
+        guestCard.className = "guest-card";
+        guestCard.setAttribute("data-guest-index", guestCount);
+
+        guestCard.innerHTML = `
+                <button type="button" class="remove-guest-btn" onclick="removeGuest(this)">Remove</button>
+                <h4>Guest ${guestCount + 1}</h4>
+                <div class="form-group">
+                    <label for="name_${guestCount}">Full Name *</label>
+                    <input type="text" id="name_${guestCount}" name="name_${guestCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email_${guestCount}">Email</label>
+                    <input type="email" id="email_${guestCount}" name="email_${guestCount}">
+                </div>
+                <div class="form-group">
+                    <label for="attending_${guestCount}">Will you be attending? *</label>
+                    <select id="attending_${guestCount}" name="attending_${guestCount}" required>
+                        <option value="">Please select...</option>
+                        <option value="yes">Yes, I'll be there!</option>
+                        <option value="no">Sorry, I can't make it</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dietary_${guestCount}">Dietary Requirements</label>
+                    <textarea id="dietary_${guestCount}" name="dietary_${guestCount}" placeholder="Please let us know about any allergies or dietary preferences..."></textarea>
+                </div>
+            `;
+
+        guestsContainer.appendChild(guestCard);
+        guestCount++;
+      }
+
+      function removeGuest(button) {
+        button.closest(".guest-card").remove();
+      }
+
+      async function submitRSVP(event) {
+        event.preventDefault();
+
+        const submitBtn = document.querySelector(".submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+
+        const formData = new FormData(event.target);
+        const guestCards = document.querySelectorAll(".guest-card");
+
+        // Build structured payload
+        const guests = [];
+        guestCards.forEach((card) => {
+          const idx = card.getAttribute("data-guest-index");
+          guests.push({
+            name: formData.get(`name_${idx}`) || "",
+            email: formData.get(`email_${idx}`) || "",
+            attending: formData.get(`attending_${idx}`) || "",
+            dietary: formData.get(`dietary_${idx}`) || "",
+            lift: formData.get(`lift_${idx}`) || "",
+          });
         });
-    </script>
-</body>
 
+        const payload = {
+          guests,
+          message: formData.get("message") || "",
+        };
+
+        try {
+          // Replace YOUR_WORKER_URL with your Cloudflare Worker URL
+          // e.g. https://my-worker.my-subdomain.workers.dev
+          const WORKER_URL = "YOUR_WORKER_URL";
+          const response = await fetch(`${WORKER_URL}/rsvp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            document.getElementById("rsvpForm").classList.remove("active");
+            document.getElementById("successMessage").classList.add("active");
+            document.getElementById("rsvpForm").reset();
+
+            // Reset guest cards back to one
+            const guestsContainer = document.getElementById("guestsContainer");
+            const allGuestCards =
+              guestsContainer.querySelectorAll(".guest-card");
+            for (let i = 1; i < allGuestCards.length; i++) {
+              allGuestCards[i].remove();
+            }
+            guestCount = 1;
+          } else {
+            alert(
+              "Sorry, something went wrong: " +
+                result.message +
+                "\nPlease try again or email us directly at joelandrews4@gmail.com",
+            );
+          }
+        } catch (err) {
+          alert(
+            "Sorry, we couldn't send your RSVP. Please try again or email us directly at joelandrews4@gmail.com",
+          );
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit RSVP";
+        }
+      }
+    </script>
+  </body>
 </html>
