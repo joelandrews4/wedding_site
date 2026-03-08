@@ -1,289 +1,298 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Joel & Ellen's Wedding</title>
     <link rel="icon" type="image/png" href="./favicon.ico" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Georgia", "Garamond", serif;
+        background: linear-gradient(135deg, #fef4f0 0%, #fff9f5 100%);
+        color: #5a4a42;
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .access-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 60px 50px;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(200, 180, 170, 0.15);
+        text-align: center;
+      }
+
+      .names {
+        font-size: 3.5em;
+        font-weight: 300;
+        color: #8b6f5c;
+        margin-bottom: 20px;
+        letter-spacing: 2px;
+      }
+
+      .ampersand {
+        font-family: "Brush Script MT", cursive;
+        font-size: 1.2em;
+        color: #d4a89f;
+      }
+
+      .welcome-text {
+        font-size: 1.3em;
+        color: #9b8178;
+        font-style: italic;
+        margin-bottom: 40px;
+      }
+
+      .divider {
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #d4a89f, transparent);
+        margin: 30px auto;
+      }
+
+      .instruction-text {
+        font-size: 1.05em;
+        color: #6b5b54;
+        margin-bottom: 30px;
+      }
+
+      .access-form {
+        margin-top: 30px;
+      }
+
+      .input-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.95em;
+        color: #8b6f5c;
+        margin-bottom: 10px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px 20px;
+        font-size: 1.1em;
+        border: 2px solid rgba(212, 168, 159, 0.3);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.6);
+        color: #5a4a42;
+        font-family: "Georgia", "Garamond", serif;
+        transition: all 0.3s ease;
+        text-align: center;
+        letter-spacing: 2px;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #d4a89f;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 0 4px rgba(212, 168, 159, 0.1);
+      }
+
+      input[type="text"]::placeholder {
+        color: #b5a8a3;
+        letter-spacing: 1px;
+      }
+
+      .submit-button {
+        width: 100%;
+        background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
+        color: white;
+        padding: 18px 40px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.2em;
+        font-family: "Georgia", "Garamond", serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
+        letter-spacing: 1px;
+      }
+
+      .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
+      }
+
+      .submit-button:active {
+        transform: translateY(0);
+      }
+
+      .error-message {
+        color: #c9988d;
+        font-size: 0.95em;
+        margin-top: 15px;
+        display: none;
+        padding: 12px;
+        background: rgba(201, 152, 141, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #c9988d;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .help-text {
+        font-size: 0.9em;
+        color: #9b8178;
+        margin-top: 25px;
+        font-style: italic;
+      }
+
+      .heart {
+        color: #d4a89f;
+        font-size: 1.5em;
+        margin: 20px 10px;
+        display: inline-block;
+        animation: heartbeat 1.5s ease-in-out infinite;
+      }
+
+      @keyframes heartbeat {
+        0%,
+        100% {
+          transform: scale(1);
         }
 
-        body {
-            font-family: 'Georgia', 'Garamond', serif;
-            background: linear-gradient(135deg, #fef4f0 0%, #fff9f5 100%);
-            color: #5a4a42;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        50% {
+          transform: scale(1.1);
         }
+      }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
-
+      @media (max-width: 600px) {
         .access-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 60px 50px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(200, 180, 170, 0.15);
-            text-align: center;
+          padding: 40px 30px;
         }
 
         .names {
-            font-size: 3.5em;
-            font-weight: 300;
-            color: #8b6f5c;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-
-        .ampersand {
-            font-family: 'Brush Script MT', cursive;
-            font-size: 1.2em;
-            color: #d4a89f;
+          font-size: 2.5em;
         }
 
         .welcome-text {
-            font-size: 1.3em;
-            color: #9b8178;
-            font-style: italic;
-            margin-bottom: 40px;
+          font-size: 1.1em;
         }
-
-        .divider {
-            width: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #d4a89f, transparent);
-            margin: 30px auto;
-        }
-
-        .instruction-text {
-            font-size: 1.05em;
-            color: #6b5b54;
-            margin-bottom: 30px;
-        }
-
-        .access-form {
-            margin-top: 30px;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.95em;
-            color: #8b6f5c;
-            margin-bottom: 10px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 1.1em;
-            border: 2px solid rgba(212, 168, 159, 0.3);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.6);
-            color: #5a4a42;
-            font-family: 'Georgia', 'Garamond', serif;
-            transition: all 0.3s ease;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #d4a89f;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 0 4px rgba(212, 168, 159, 0.1);
-        }
-
-        input[type="text"]::placeholder {
-            color: #b5a8a3;
-            letter-spacing: 1px;
-        }
-
-        .submit-button {
-            width: 100%;
-            background: linear-gradient(135deg, #d4a89f 0%, #c9988d 100%);
-            color: white;
-            padding: 18px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2em;
-            font-family: 'Georgia', 'Garamond', serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(212, 168, 159, 0.3);
-            letter-spacing: 1px;
-        }
-
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(212, 168, 159, 0.4);
-        }
-
-        .submit-button:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            color: #c9988d;
-            font-size: 0.95em;
-            margin-top: 15px;
-            display: none;
-            padding: 12px;
-            background: rgba(201, 152, 141, 0.1);
-            border-radius: 8px;
-            border-left: 3px solid #c9988d;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .help-text {
-            font-size: 0.9em;
-            color: #9b8178;
-            margin-top: 25px;
-            font-style: italic;
-        }
-
-        .heart {
-            color: #d4a89f;
-            font-size: 1.5em;
-            margin: 20px 10px;
-            display: inline-block;
-            animation: heartbeat 1.5s ease-in-out infinite;
-        }
-
-        @keyframes heartbeat {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        @media (max-width: 600px) {
-            .access-card {
-                padding: 40px 30px;
-            }
-
-            .names {
-                font-size: 2.5em;
-            }
-
-            .welcome-text {
-                font-size: 1.1em;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <div class="access-card">
-            <div class="names">
-                Joel <span class="ampersand">&</span> Ellen
-            </div>
-            <div class="welcome-text">Welcome to our wedding celebration</div>
+      <div class="access-card">
+        <div class="names">Joel <span class="ampersand">&</span> Ellen</div>
+        <div class="welcome-text">Welcome to our wedding celebration</div>
 
-            <div class="divider"></div>
+        <div class="divider"></div>
 
-            <p class="instruction-text">
-                Please enter the access code from your invitation to view our wedding details and RSVP.
-            </p>
+        <p class="instruction-text">
+          Please enter the access code from your invitation to view our wedding
+          details and RSVP.
+        </p>
 
-            <form class="access-form" onsubmit="validateCode(event)">
-                <div class="input-group">
-                    <label for="accessCode">Access Code</label>
-                    <input type="text" id="accessCode" name="accessCode" placeholder="Enter code here" required
-                        autocomplete="off">
-                </div>
+        <form class="access-form" onsubmit="validateCode(event)">
+          <div class="input-group">
+            <label for="accessCode">Access Code</label>
+            <input
+              type="text"
+              id="accessCode"
+              name="accessCode"
+              placeholder="Enter code here"
+              required
+              autocomplete="off"
+            />
+          </div>
 
-                <button type="submit" class="submit-button">Enter</button>
+          <button type="submit" class="submit-button">Enter</button>
 
-                <div id="errorMessage" class="error-message">
-                    The access code you entered is incorrect. Please check your invitation and try again.
-                </div>
-            </form>
+          <div id="errorMessage" class="error-message">
+            The access code you entered is incorrect. Please check your
+            invitation and try again.
+          </div>
+        </form>
 
-            <p class="help-text">
-                Can't find your access code? Please check your physical or digital invitation.
-            </p>
+        <p class="help-text">
+          Can't find your access code? Please check your physical or digital
+          invitation.
+        </p>
 
-            <div class="heart">♥</div>
-        </div>
+        <div class="heart">♥</div>
+      </div>
     </div>
 
     <script>
-        function validateCode(event) {
-            event.preventDefault();
+      function validateCode(event) {
+        event.preventDefault();
 
-            async function unlock() {
-                console.log("Validating code...");
-                const code = document.getElementById("accessCode").value;
-                const res = await fetch("https://wedding-worker.joelandrews4.workers.dev/private", {
-                    method: "POST",
-                    body: JSON.stringify({ code }),
-                    headers: { "Content-Type": "application/json" }
-                });
-                if (res.ok) {
-                    const html = await res.text();
-                    document.open();
-                    document.write(html);
-                    document.close();
-                } else {
-                    // Incorrect code - show error message
-                    errorMessage.classList.add('show');
-                    document.getElementById('accessCode').value = '';
-                    document.getElementById('accessCode').focus();
+        async function unlock() {
+          console.log("Validating code...");
+          const code = document.getElementById("accessCode").value;
+          const res = await fetch(
+            "https://wedding-worker.joelandrews4.workers.dev/private",
+            {
+              method: "POST",
+              body: JSON.stringify({ code }),
+              headers: { "Content-Type": "application/json" },
+            },
+          );
+          if (res.ok) {
+            const html = await res.text();
+            document.open();
+            document.write(html);
+            document.close();
+          } else {
+            // Incorrect code - show error message
+            errorMessage.classList.add("show");
+            document.getElementById("accessCode").value = "";
+            document.getElementById("accessCode").focus();
 
-                    // Shake animation for error
-                    const card = document.querySelector('.access-card');
-                    card.style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        card.style.animation = '';
-                    }, 500);
-                }
-            }
-            unlock();
+            // Shake animation for error
+            const card = document.querySelector(".access-card");
+            card.style.animation = "shake 0.5s";
+            setTimeout(() => {
+              card.style.animation = "";
+            }, 500);
+          }
         }
+        unlock();
+      }
 
-        // Add shake animation
-        const style = document.createElement('style');
-        style.textContent = `
+      // Add shake animation
+      const style = document.createElement("style");
+      style.textContent = `
             @keyframes shake {
                 0%, 100% { transform: translateX(0); }
                 25% { transform: translateX(-10px); }
                 75% { transform: translateX(10px); }
             }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
 
-        // Clear error message when user starts typing
-        document.getElementById('accessCode').addEventListener('input', function () {
-            document.getElementById('errorMessage').classList.remove('show');
+      // Clear error message when user starts typing
+      document
+        .getElementById("accessCode")
+        .addEventListener("input", function () {
+          document.getElementById("errorMessage").classList.remove("show");
         });
     </script>
-</body>
-
+  </body>
 </html>
